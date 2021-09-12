@@ -2,6 +2,10 @@
 
 My dotfiles for Arch Linux.
 
+![screenshot](screenshot.png)
+
+[← 2020 dotfiles](https://github.com/marioortizmanero/dotfiles-2020)
+
 ## Setup Information
 
 * Terminal: [alacritty](https://github.com/alacritty/alacritty)
@@ -15,6 +19,9 @@ My dotfiles for Arch Linux.
 * Window manager: [bspwm](https://github.com/baskerville/bspwm)
 * Display manager: [lightdm](https://wiki.archlinux.org/index.php/LightDM)
 * Notification daemon: [dunst](https://github.com/dunst-project/dunst)
+* Wallpaper:
+
+![wallpaper](../.config/background.png)
 
 [Pywal](https://github.com/dylanaraps/pywal) is configured for most of these to
 switch between the light ([solarized](https://ethanschoonover.com/solarized/))
