@@ -1,0 +1,180 @@
+alacritty
+android-sdk (AUR)
+android-sdk-build-tools (AUR)
+android-sdk-platform-tools (AUR)
+android-tools
+base
+bash-language-server
+bear (AUR)
+bind
+birdtray (AUR)
+blueman
+bluez-utils
+bspwm
+busybox
+cargo-edit
+cargo-expand
+cargo-llvm-lines (AUR)
+cbindgen
+ccls
+chromium
+cmake
+cmatrix
+cups
+dhcpcd
+discord
+docker
+docker-compose
+dunst
+easyeffects
+efibootmgr
+electrum-git (AUR)
+fd
+feh
+firefox
+flake8
+flameshot
+flutter (AUR)
+font-manager (AUR)
+fzf
+gdb
+ghidra
+gimp
+git
+git-lfs
+gnuplot
+go
+gobject-introspection
+gopls
+gparted
+grub
+gthumb
+heroku-cli-bin (AUR)
+htop
+hugo
+inkscape
+inotify-tools
+intel-ucode
+javacc (AUR)
+jbigkit
+jdk8 (AUR)
+jdk-openjdk
+krita
+latex-mk (AUR)
+lib32-alsa-plugins
+lib32-gnutls
+lib32-libpulse
+lib32-sqlite
+lib32-vulkan-intel
+libreoffice-fresh
+lightdm
+lightdm-webkit2-greeter
+lightdm-webkit2-theme-glorious (AUR)
+linux
+linux-firmware
+linux-headers
+lolcat
+lutris
+man-db
+man-pages
+megasync-bin (AUR)
+minted
+monero-gui
+moodle-dl-git (AUR)
+mpv
+nault-bin (AUR)
+nautilus
+neofetch
+neovim-git (AUR)
+networkmanager
+network-manager-applet
+networkmanager-dispatcher-ntpd (AUR)
+nnn
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+obs-studio
+octave
+openssh
+os-prober
+otf-san-francisco-mono (AUR)
+pacman-contrib
+pandoc-bin (AUR)
+papirus-icon-theme
+pavucontrol
+perf
+picom
+plata-theme (AUR)
+polybar (AUR)
+pulseaudio-control (AUR)
+python-black
+python-docutils
+python-language-server
+python-matplotlib
+python-pip
+python-pylint
+python-pynvim
+python-pywal
+python-wheel
+qbittorrent
+qt5-tools
+redshift
+ripgrep
+rofi
+rsync
+ruby-rouge
+rust-analyzer
+rustup
+scrot
+shellcheck-bin (AUR)
+spotify (AUR)
+sxhkd
+tectonic-bin (AUR)
+telegram-desktop
+texlab
+thunar
+thunderbird
+tk
+tokei
+trash-cli
+ttf-computer-modern-fonts (AUR)
+ttf-font-awesome
+ttf-material-design-icons (AUR)
+ttf-ms-fonts (AUR)
+twine
+unrar
+usbutils
+valgrind
+vi
+vidify-audiosync (AUR)
+vidify (AUR)
+vlc
+vscode-css-languageserver-bin (AUR)
+vulkan-intel
+weechat
+wget
+wine-staging
+wmname
+xdo
+xdotool
+xf86-video-intel
+xorg-server
+xorg-server-xephyr
+xorg-twm
+xorg-xclock
+xorg-xev
+xorg-xinit
+xorg-xinput
+xorg-xprop
+xorg-xrandr
+xorg-xset
+xorg-xwininfo
+xsel
+xsettingsd
+yay (AUR)
+youtube-dl-git (AUR)
+zathura
+zoom (AUR)
+zsh
+zsh-pure-prompt (AUR)
+zsh-syntax-highlighting

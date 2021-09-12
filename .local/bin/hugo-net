@@ -1,0 +1,5 @@
+#!/bin/sh
+
+ip=$(ip route get 1 | awk '{print $(NF-2);exit}')
+
+hugo server --bind=$ip --baseURL=http://$ip:1313

@@ -1,0 +1,150 @@
+= Vim cheatsheet
+:toc:
+
+== Native
+
+=== Movement
+
+* `h`, `j`, `k`, `l` for *movement* (left, down, up, right).
+* `w`, `e` to move to the beginning or end of the *next word*. `b` to move to
+  the beginning of the *previous word*. Uppercased, special characters like
+  commas will be skipped (not spaces). `W` and `E` will do the same with *WORDS*
+  (skips special characters)
+* `a` enters insert mode after the cursor. `A` to insert into the end of a line,
+  `I` to insert it at the beginning of the line.
+* `{` or `}` to go to the start or end of a *block*.
+* `%` jumps from a *parenthesis*/similar to the the other (`)`,`]`,`}`).
+* `]c` jumps to the next *git-gutter change*, and `[c` to the previous one.
+* `gn` jumps to the next *Coc-Nvim diagnostic*, and `gN` to the previous one.
+* `gd` jumps to the *function/type definition*, and `gr` jumps to the first
+  reference.
+* `Ctrl+o` jumps to the last position.
+
+NOTE: You can type a number before most of these commands to *repeat* them. `2j`
+goes to the letter 2 positions to the left. It can be done with text too if you
+type `i+<esc>` after writing the text desired.
+
+=== Selecting and editing
+
+* `u` *undos* the last changes.
+* `Ctrl+r` *redos* the last undo.
+* `V` selects an entire line, `v` starts a *selection*. `Ctrl+v` selects blocks
+  instead. `o` moves the cursor to the other end of the selection.  To insert
+  text, select, press `Shift+i` and insert it.
+* `y` to *copy* the selection, `d` to *cut* it, `p` to *paste* after the cursor.
+  `P` pastes before. `x` cuts a single character. `r` to replace a single
+  character. `c` will delete the character (or word with `ce`) and enter insert
+  mode.
+* `d` or `y` followed by `aw` will do the action the current word. `D` will
+  delete from the cursor to the end of line.
+* `>` or `<` after selecting a block will increase or decrease its indentation
+  by 1. This can be done repeatedly if a number is input before, like `5>`
+* `o` opens a line below and enters insert mode. `O` does the same but above the
+  current line.
+* `=` will *fix the indentation* for a selection.
+* `gq` will *line-wrap* a selection for the `textwidth` set.
+
+=== Searching
+
+* `/` followed by a word will find its following *occurences* in the file and
+  `?` the previous. `n` goes to the next result and `N` to the previous one.
+* `:%s/foo/bar/g` will *replace* all `foo` occurrences for `bar`. Flags: `c` to
+  confirm, `g` for global results (not only the first is changed), `i` for case
+  insensitive and the `%` at the beginning is to replace in the entire file
+  instead of the current line.
+
+=== Splits and Tabs
+
+.Opening new tabs or splits
+* `:vs <file>` to split vertically and `:sp <file>` to split horizontally a new
+  file.
+* `:tabedit` to open a new tab with a file.
+
+.Moving between splits, first pressing `Ctrl+w` and then:
+* `w` *cycles* between tabs. Spamming `Ctrl+w` also works.
+* `h`, `j`, `k`, `l` to *move* to the left, down, up or right tab.
+* `H`, `J`, `K`, `L` to move the tab to the left, down, up or right side
+* `c` to *close* a tab.
+* `T` to move it to a *new* full-window tab. `:tab sp` to copy it instead.
+* `:res <lines>` to resize a tab. If on a terminal, `Ctrl+W` opens the vim
+  commands.
+
+.Moving between tabs
+* `gt` to go to next tab, `gT` to the previous one, and `{i}gt` to the `i`th.
+  `Ctrl+PgUp` and `Ctrl+PgDown` are the same, respectively.
+
+=== Folding
+
+* `zo` to *open* the fold, `zc` to *close* it. `za` to *toggle* the fold, `zA`
+  to do it recursively.
+* `zR` to *open all* folds, `zM` to *close all* folds.
+
+=== Spelling
+
+* `:set spell spelllang=LANG` will enable the spellchecking, where `LANG` can be
+  any code like `en_us` or `es`.
+* `]s` and `[s` to go to the next/previous bad word.
+* `zg` to add a word to the current spelling dictionary, and `zw` to mark it as
+  a bad word. Use `zug` and `zuw` to undo these actions.
+
+=== Macros
+
+* `qa` starts *recording macro*, `q` stops recording.
+* `@a` will play the macro, `@:` will play the last macro.
+
+== Custom and Plugins
+
+=== LSP
+
+* `K` to hover and *see documentation*.
+* `,e` to show *diagnostics* for that line.
+* `gD` to jump to the *declaration*.
+* `gd` to jump to the *definition*.
+* `gi` to jump to the *implementation*.
+* `gr` to *list the references*.
+* `,r` to *rename*.
+* `Tab` for the *autocompletion* dialog, `Shift+Tab` for inverse movement.
+* `]e` to move to the *next diagnostic*, `[e` to the previous one.
+
+=== NERDTree, Fuzzy Finder
+
+.NerdTREE
+* `:NERDTree` to open the file manager to the left.
+* _`?` for more bindings inside it._
+
+.Fuzzy Finder
+* `,ff` to find *files*.
+* `,fl` to find *lines* in the entire *path*.
+* `,fL` to find *lines* in the current *buffer*.
+
+Opening files in both is the same, but Fuzzy Finder requires `Ctrl` as well for
+the last ones:
+
+* `Return` *opens* the file.
+* `i` opens the file in *splitscreen*.
+* `s` opens the file in *vertical* splitscreen.
+* `t` opens the file in a new **tab**.
+
+=== Custom bindings
+
+* `,+` opens a new *terminal* at the file’s directory (shortcut for
+  `:TermFromCurDir`.
+* `,t` opens a *vim terminal* at the bottom (shortcut for `:VimTerm`).
+* `,c` *toggles a comment* for the selection or current line with NERDCommenter.
+
+.Toggle configuration
+* `,i` for *indentation*: spaces (default) and tabs.
+* `,l` for the *column length hint*: 80 (default) and 120.
+* `,n` for the *column numbers*: on (default) and off.
+* `,N` for *column numbers mode*: relative (default) and absolute.
+
+=== Custom commands
+
+* `:QuickHelp` opens this help file.
+* `:CopyDir` copies the current file directory to the clipboard.
+* `:NoteTakingMode` and `:InsertX` are useful to take notes quickly.
+
+.Live preview
+* `:MarkdownPreview`: Markdown.
+* `:VimtexCompile`: LaTeX. 
+* `:AdocPdfLiveOpen`: Asciidoctor for PDF.

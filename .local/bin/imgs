@@ -1,0 +1,209 @@
+#!/usr/bin/env python3
+# Requires Python >=3.7
+
+import os
+import sys
+import re
+import argparse
+import subprocess
+import shutil
+from typing import List
+
+
+def get_file_regex(fmt: str) -> str:
+    """
+    Returns the regex pattern for a format
+    """
+
+    file_regex = r"([\w\-. /]+)"
+
+    if fmt == "none":
+        return file_regex
+    elif fmt == "markdown":
+        return r"![\w*]\(" + file_regex + r"\)"
+    elif fmt == "tex":
+        return r"\\includegraphics\{" + file_regex + r"\}"
+    elif fmt == "asciidoctor":
+        return r"image::?" + file_regex + r"\[.*\]?"
+    else:
+        raise Exception(f"Invalid format {fmt}")
+
+
+def mode_clean_unused(args: argparse.Namespace) -> None:
+    """
+    Mode to clean up unused images.
+    """
+
+    # Showing nodes with the same format
+    def print_nodes(nodes: List[str]):
+        for node in nodes:
+            print(f"* {node}")
+
+    # Regex patterns for the files
+    pattern = get_file_regex(args.format)
+    regex = re.compile(pattern)
+
+    # Files found in the provided file
+    mentioned = set()
+    # Files found in the directory with the images
+    existing = set([f"{args.dir}/{name}" for name in os.listdir(args.dir)])
+
+    for source in args.clean_sources:
+        with open(source, "r") as f:
+            for line in f.readlines():
+                found = regex.findall(line)
+                mentioned.update(found)
+
+    # Results are converted into the standardized `os.path` format for
+    # comparisons. Also sorted for printing.
+    unnecessary = list(map(os.path.relpath, existing - mentioned))
+    unnecessary.sort()
+    broken = list(map(os.path.relpath, mentioned - existing))
+    broken.sort()
+
+    if len(broken) > 0:
+        print("Found broken images:")
+        print_nodes(broken)
+
+    if len(unnecessary) == 0:
+        print("No files to remove")
+        return
+
+    print("Files that will be removed:")
+    print_nodes(unnecessary)
+    print("Confirm? [y/n]: ", end="")
+    while True:
+        reply = input()
+        reply = reply.lower()
+        if reply == "y":
+            print("Removing... ", end="")
+            for path in unnecessary:
+                os.remove(path)
+            print("done")
+            break
+        elif reply == "n":
+            print("Aborting...")
+            break
+
+
+def run_cmd(args: List[str]) -> str:
+    subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def run_krita(filename: str):
+    run_cmd(["krita", filename, "--nosplash"])
+
+
+def run_scrot(filename: str):
+    run_cmd(["scrot", filename, "--select", "--freeze", "--overwrite"])
+
+
+def get_next_num(where: str) -> str:
+    """
+    Finding the first name available.
+    """
+
+    names = [os.path.splitext(f)[0] for f in os.listdir(where)]
+    nums = set()
+    for name in names:
+        try:
+            num = int(name)
+        except ValueError:
+            continue
+        nums.add(num)
+
+    if len(nums) == 0:
+        return 0
+
+    # Trying to find gaps
+    for (num, expected) in zip(sorted(nums), range(0, max(nums))):
+        if num != expected:
+            return expected
+
+    # Otherwise the next one to the maximum
+    return max(nums) + 1
+
+
+def format_name(name: str, path: str, fmt: str) -> str:
+    """
+    Obtaining the text for a format.
+    """
+
+    if fmt == "none":
+        return path
+    elif fmt == "markdown":
+        return f"![{name}]({path})"
+    elif fmt == "tex":
+        return r"\includegraphics{" + name + "}"
+    elif fmt == "asciidoctor":
+        return f"image::{path}[{name}, width=75%, align=center]"
+    else:
+        raise Exception(f"Invalid format {fmt}")
+
+
+def mode_new_img(args: argparse.Namespace) -> None:
+    """
+    Mode to create a new image.
+    """
+
+    if not os.path.exists(args.dir):
+        os.makedirs(args.dir)
+
+    next_num = get_next_num(args.dir)
+    filename = os.path.join(args.dir, f"{next_num}.{args.insert_ext}")
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
+    base_file = args.base_img or os.path.join(
+        cur_dir, "data", f"empty.{args.insert_ext}"
+    )
+    shutil.copyfile(base_file, filename)
+
+    if args.insert_type == "drawing":
+        run_krita(filename)
+    elif args.insert_type == "screenshot":
+        run_scrot(filename)
+    elif args.insert_type == "custom-screenshot":
+        run_scrot(filename)
+        run_krita(filename)
+    else:
+        raise Exception(f"Invalid insertion type {args.insert_type}")
+
+    print(format_name(str(next_num), filename, args.format))
+
+
+# Parsing basic arguments
+parser = argparse.ArgumentParser(description="manage images easily when taking notes")
+parser.add_argument("mode", metavar="MODE", help="clean,insert")
+parser.add_argument(
+    "--insert-type",
+    dest="insert_type",
+    default="unspecified",
+    help="drawing,screenshot,custom-screenshot",
+)
+parser.add_argument("--dir", dest="dir", default=".", help="destination directory")
+parser.add_argument(
+    "--insert-ext",
+    dest="insert_ext",
+    default="png",
+    help="extension for the inserted files",
+)
+parser.add_argument(
+    "--format", dest="format", default="none", help="none,markdown,tex,asciidoctor"
+)
+parser.add_argument(
+    "--base-img", dest="base_img", help="base image for modes that require one"
+)
+parser.add_argument(
+    "--clean-sources",
+    dest="clean_sources",
+    nargs="+",
+    help="source file for the cleanup mode, can be given multiple times",
+)
+args = parser.parse_args()
+
+mode = args.mode.lower()
+if mode == "clean":
+    mode_clean_unused(args)
+elif mode == "insert":
+    mode_new_img(args)
+else:
+    print(f"Unknown mode '{mode}'", to=sys.stderr)

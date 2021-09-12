@@ -1,0 +1,95 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+
+% latex in spanish
+\usepackage[spanish]{babel}
+
+% code syntax highlighting
+\usepackage{minted}
+\usepackage{xcolor}
+\usemintedstyle{vs}
+\definecolor{bg}{HTML}{f8f8f8}
+\setminted{
+    frame=lines,
+    framesep=2mm,
+    bgcolor=bg,
+    fontsize=\footnotesize,
+    linenos
+}
+
+% plotting
+\usepackage{graphicx}
+
+% references
+\usepackage{hyperref}
+\usepackage{nameref}
+
+% quotes con "abc"
+\usepackage{csquotes}
+\MakeOuterQuote{"}
+
+\usepackage{geometry}
+\geometry{a4paper, portrait, margin=1.2in}
+
+\usepackage{pgfplots} % gráficos
+\usetikzlibrary[patterns] % gráficos con patrones
+\pgfplotsset{width=11cm, compat=1.8}
+
+\graphicspath{ {./images/} }
+
+\title{Título}
+\author{Mario Ortiz Manero\\NIA \and Other\\NIA}
+\date{Mes de Año}
+
+% Comando para código inline
+\newcommand{\code}[1] {\mintinline{text}{#1}}
+\newcommand{\image}[1] {
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{#1}
+  \end{figure}
+}
+
+\begin{document}
+
+\maketitle
+\newpage
+
+\bigskip
+
+% Índice
+\setcounter{tocdepth}{2}
+\tableofcontents
+\newpage
+
+% Márgenes entre párrafos sin \medskip
+\setlength{\parskip}{0.75em}
+% \setlength{\parindent}{0pt}
+
+% Empieza en cero
+% \setcounter{section}{-1}
+
+% Saltos de línea siempre para evitar overflows.
+% \pretolerance=10000
+
+\section{Introducción} \label{intro}
+Referencia a la bibliografía \cite{nombre}. Código \code{inline}. Bloque de
+código:
+
+\begin{minted}{rust}
+fn main() {
+    println!("Hello, World!");
+}
+\end{minted}
+
+\href{https://google.com/}{Hipervínculo}, referencia con nombre a
+\nameref{intro}, y con el número: sección \ref{intro}.
+
+% Bibliografía
+\newpage
+\begin{thebibliography}{9} \label{bibliografia}
+\bibitem{nombre} Nombre de Referencia
+\end{thebibliography}
+
+\end{document}

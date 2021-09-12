@@ -1,0 +1,228 @@
+# vim: filetype=dosini
+# This must be loaded with `launch.py`, which sets some options dynamically.
+
+[colors]
+background = ${xrdb:color0}
+background-alt = ${xrdb:color0}
+foreground = ${xrdb:color7}
+foreground-alt = ${xrdb:color7}
+primary = ${xrdb:color1}
+secondary = ${xrdb:color2}
+alert = ${xrdb:color3}
+
+red = ${xrdb:color1}
+green = ${xrdb:color2}
+yellow = ${xrdb:color3}
+blue = ${xrdb:color4}
+magenta = ${xrdb:color5}
+cyan = ${xrdb:color6}
+white = #b7bcc7
+gray = #393e48
+
+[bar/laptop_bar]
+; This bar supports multiple monitors, so these are configured when launching
+; polybar as environment variables.
+monitor = ${env:MONITOR}
+tray-position = ${env:TRAY_POS:none}
+
+bottom = true
+width = 100%
+height = 33
+fixed-center = true
+wm-restack = bspwm
+
+separator = %{F#555}|%{F-}
+separator-padding = 2
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+line-size = 3
+line-color = ${colors.blue}
+
+padding-right = 5
+module-margin-left  = 2
+module-margin-right = 2
+
+# The default font and the emojis/icons
+font-0 = "Product Sans: style=Regular: pixelsize=14"
+font-1 = "Font Awesome 5 Free: style=Solid: pixelsize=11"
+font-2 = "Font Awesome 5 Brands: pixelsize=11"
+; 2 pixels margin
+font-3 = "Material Icons: style=Regular: pixelsize=13; 2"
+
+modules-left   = powermenu bspwm
+modules-center = player-mpris-tail
+modules-right  = pulseaudio-control easyeffects-presets weather date battery
+enable-ipc = true
+
+cursor-click = pointer
+
+[bar/desktop_bar]
+; This bar supports multiple monitors, so these are configured when launching
+; polybar as environment variables.
+monitor = ${env:MONITOR}
+tray-position = ${env:TRAY_POS:none}
+
+bottom = true
+width = 100%
+height = 33
+fixed-center = true
+wm-restack = bspwm
+
+separator = %{F#555}|%{F-}
+separator-padding = 2
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+line-size = 3
+line-color = ${colors.blue}
+
+padding-left  = 5
+padding-right = 5
+module-margin-left  = 2
+module-margin-right = 2
+
+# The default font and the emojis/icons
+font-0 = "Product Sans: style=Regular: pixelsize=14"
+font-1 = "Font Awesome 5 Free: style=Solid: pixelsize=11"
+font-2 = "Font Awesome 5 Brands: pixelsize=11"
+; 2 pixels margin
+font-3 = "Material Icons: style=Regular: pixelsize=13; 2"
+
+modules-left   = powermenu bspwm
+modules-center = player-mpris-tail
+modules-right  = pulseaudio-control easyeffects-presets weather date
+enable-ipc = true
+
+tray-padding = 2
+tray-reparent = true
+
+cursor-click = pointer
+
+
+[module/weather]
+type = custom/script
+exec = ~/.config/polybar/scripts/weather.sh
+interval = 1800
+label = "%{A1:firefox https\\://www.google.com/search?q=weather:}%output%%{A}"
+
+
+[module/player-mpris-tail]
+type = custom/script
+exec = ~/.config/polybar/scripts/player-mpris-tail.py --icon-playing  --icon-paused  --icon-stopped   -f '%{A1:bash ~/.config/bspwm/scripts/show_scratchpad.sh:}%{A}%{A1:~/.config/polybar/scripts/player-mpris-tail.py previous:}  %{A} %{A1:~/.config/polybar/scripts/player-mpris-tail.py play-pause:} {icon-reversed} %{A} %{A1:~/.config/polybar/scripts/player-mpris-tail.py next:}  %{A} {:artist:t18:{artist}:}{:artist:: :}{:t40:{title}:}'
+tail = true
+
+
+[module/bspwm]
+type = internal/bspwm
+format = <label-state>
+
+pin-workspaces = true
+inline-mode = false
+enable-scroll = false
+label-empty =
+
+label-focused-background = ${colors.background-alt}
+label-focused-underline = ${colors.white}
+label-focused-padding = 3
+
+label-occupied-underline = ${colors.background-alt}
+label-occupied-padding = 3
+
+label-urgent-underline = ${colors.red}
+label-urgent-padding = 3
+
+
+[module/date]
+type = internal/date
+interval = 5
+
+date = "%a %d %b,"
+time = "%H:%M"
+
+label = "%{A1:firefox https\\://calendar.google.com/:}%{A3:gnome-clocks &:} %date% %time%%{A}%{A}"
+
+
+# Requires pulseaudio-control installed
+[module/pulseaudio-control]
+type = custom/script
+tail = true
+
+exec         = pulseaudio-control --format '$SINK_NICKNAME $VOL_LEVEL%' --icons-volume ' , ' --icon-muted ', ' --sink-nicknames-from 'device.description' --sink-nickname 'alsa_output.usb-Kingston_HyperX_Virtual_Surround_Sound_00000000-00.analog-stereo:' --sink-nickname 'alsa_output.pci-0000_00_1f.3.analog-stereo:' listen
+click-right  = pavucontrol &
+click-left   = pulseaudio-control togmute
+click-middle = pulseaudio-control --sink-blacklist 'alsa_output.pci-0000_01_00.1.hdmi-stereo-extra2' next-sink
+scroll-up    = pulseaudio-control --volume-max 130 up
+scroll-down  = pulseaudio-control down
+
+
+# Uses IPC to update the output on click
+#[module/easyeffects-presets]
+#type = custom/ipc
+#initial = 1
+## NOTE: for some reason using `hook-0` here breaks polybar for multiple monitors
+#hook-0 = easyeffects-presets --format '  $PRESET' show
+## The command shouldn't be ran once for each bar, so `next` and `reset` are
+## executed here and then the output is updated via IPC.
+#click-left   = easyeffects-presets prev  && polybar-msg hook easyeffects-presets 1
+#click-right  = easyeffects-presets next  && polybar-msg hook easyeffects-presets 1
+#click-middle = easyeffects-presets reset && polybar-msg hook easyeffects-presets 1
+
+
+[module/powermenu]
+type = custom/menu
+
+# opening
+label-open = ""
+label-open-font = 4
+# cancel
+label-close = ""
+# separator
+label-separator = " / "
+
+# shutdown
+menu-0-0 = ""
+menu-0-0-exec = systemctl poweroff
+# suspend
+menu-0-1 = ""
+menu-0-1-exec = systemctl suspend
+# reboot
+menu-0-2 = " "
+menu-0-2-exec = systemctl reboot
+
+format-background = ${colors.blue}
+format-foreground = ${colors.background}
+format-padding = 5
+format-spacing = 0
+
+[module/battery]
+type = internal/battery
+battery = BAT0
+adapter = ADP1
+poll-interval = 5
+
+format-charging = <animation-charging> <label-charging>
+label-charging = "%percentage%%"
+
+label-full =  100%
+
+format-discharging = <ramp-capacity> <label-discharging>
+label-discharging = "%percentage%%"
+
+ramp-capacity-0 = " "
+ramp-capacity-0-foreground = ${colors.red}
+ramp-capacity-1 = " "
+ramp-capacity-1-foreground = ${colors.yellow}
+ramp-capacity-2 = " "
+ramp-capacity-3 = " "
+ramp-capacity-4 = " "
+
+animation-charging-0 = " "
+animation-charging-1 = " "
+animation-charging-2 = " "
+animation-charging-3 = " "
+animation-charging-4 = " "
+animation-charging-foreground = ${colors.foreground-alt}
+animation-charging-framerate = 750

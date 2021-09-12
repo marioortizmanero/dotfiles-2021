@@ -1,0 +1,11 @@
+[Unit]
+Description=Change the system theme to dark mode automatically
+After=graphical.target
+
+[Service]
+Environment=PATH=/usr/local/bin:/usr/bin:/usr/local/sbin:/home/mario/.local/bin
+Type=oneshot
+ExecStart=sh -c '"%h/.local/bin/set-theme" dark'
+
+[Install]
+WantedBy=default.target

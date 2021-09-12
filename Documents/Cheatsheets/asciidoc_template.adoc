@@ -1,0 +1,125 @@
+= Title
+Mario Ortiz Manero
+// GENERAL (remove either HTML or PDF depending on what's required):
+:sectnums:
+// Mathematical expressions for `[stem]` or `[latexmath]`
+:math:
+:stem: latexmath
+// TRANSLATIONS:
+:lang: es
+:toc-title: Índice
+:example-caption: Ejemplo
+:figure-caption: Figura
+:table-caption: Tabla
+// PDF EXPORT:
+// ToC in separate page
+:toc: macro
+:doctype: book
+:pdf-page-margin: [1in, 1in, 1in, 1in]
+:imagesoutdir: images
+:source-highlighter: rouge
+// Previews at https://spsarolkar.github.io/rouge-theme-preview/
+:rouge-style: monokai-sublime
+// HTML EXPORT:
+// ToC to the side
+:toc: left
+:reproducible:
+
+// PDF export with ToC in new page
+<<<
+toc::[]
+<<<
+
+.State diagram, plantuml
+[plantuml, align=center]
+....
+digraph D {
+    init [label="", shape=point]
+    E [label="Espera"]
+    CC [label="Copia copiando"]
+    C [label="Copia"]
+    PC [label="Primario copiando"]
+    P [label="Primario"]
+
+    init -> E
+    E -> CC [label="vista en la\nque es copia"]
+    E -> PC [label="vista en la\nque es primario"]
+
+    CC -> C [label="copia realizada"]
+    CC -> E [label="no aparece\nen tentativa"]
+
+    C -> PC [label="vista en la\nque es primario"]
+    C -> E [label="no aparece\nen tentativa"]
+
+    PC -> P [label="copia realizada"]
+    PC -> E [label="no aparece\nen tentativa", color="red"]
+
+    P -> E [label="no aparece\nen tentativa"]
+    P -> PC [label="vista con\nnuevo copia"]
+}
+....
+
+.State diagram, graphviz
+[graphviz, align=center]
+....
+digraph D {
+  {I, "+e"} -> C -> "+s"
+  "-v" -> G -> "+s"
+}
+....
+
+.Sequence diagram
+[plantuml, align=center]
+....
+@startuml
+hide footbox
+participant "Cliente 1"
+participant "Cliente 2"
+participant "Cliente 3"
+"Cliente 3" -> "Gestor de Vistas": MsgLatido{0, self}
+"Cliente 3" <-- "Gestor de Vistas"
+loop LATIDOS_FALLIDOS + LATIDOS_MARGEN
+    "Cliente 1" -> "Gestor de Vistas": MsgLatido{4, self}
+    "Cliente 1" <-- "Gestor de Vistas"
+    "Cliente 3" -> "Gestor de Vistas": MsgLatido{4, self}
+    "Cliente 3" <-- "Gestor de Vistas"
+end
+destroy "Cliente 2"
+"Cliente 1" -> "Gestor de Vistas": MsgLatido{5, self}
+"Cliente 1" <-- "Gestor de Vistas": MsgVista{Cliente1, Cliente3, 5}
+@enduml
+....
+
+.Plot
+[gnuplot, width=75%, align=center]
+....
+$data << EOD
+2 253035.5 237466.9
+3 234182.7 227087.2
+4 215329.9 216707.5
+5 206327.8 196477.1
+EOD
+
+plot '$data' u 1:2 w lp t 'Multidimensionales anteriores', '$data' u 1:3 w lp t 'Regresión Robusta'
+....
+
+.Useful style file for asciidoctor-pdf. Save as `style.yml`
+[source, yaml]
+----
+extends: default
+# Configuring some fonts
+code:
+  font-size: 10.0
+blockquote:
+  font-size: 11.0
+  font-style: italic
+# Comments in the center
+footer:
+  columns: =100%
+  recto:
+    center:
+      content: '{page-number}'
+  verso:
+    center:
+      content: '{page-number}'  
+----

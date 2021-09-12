@@ -1,0 +1,8 @@
+[Unit]
+Description=Change the system theme to light mode automatically
+
+[Timer]
+OnCalendar=*-*-* 8:00:00
+
+[Install]
+WantedBy=timers.target

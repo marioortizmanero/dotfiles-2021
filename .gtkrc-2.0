@@ -1,0 +1,7 @@
+gtk-font-name="Azo Sans Lt Regular 11"
+gtk-theme-name="Plata-Noir"
+gtk-icon-theme-name="Papirus-Dark"
+# Scrollbar jumps when pressing on a different part
+gtk-primary-button-warps-slider=1
+# No middle click paste
+gtk-enable-primary-paste=false

@@ -1,0 +1,36 @@
+# vim: ft=sh
+
+### HOST SPECIFIC CONFIG ###
+hostname=$(cat /etc/hostname)
+case "$hostname" in
+    btwiusedell)  # Laptop
+        MAIN_MONITOR=eDP1
+        SECOND_MONITOR=HDMI1
+        if xrandr | grep -q "$SECOND_MONITOR connected"; then
+            xrandr --output $SECOND_MONITOR --primary --mode 1920x1080
+            xrandr --output $MAIN_MONITOR --mode 1280x720 --right-of $SECOND_MONITOR
+            xrandr --output $MAIN_MONITOR --pos 1920x360
+            # A hack for alacritty's font size.
+            sed -i -E 's/^(\s*size:)\s*[0-9.]+$/\1 11.0/' ~/.config/alacritty/alacritty.yml
+        else
+            sed -i -E 's/^(\s*size:)\s*[0-9.]+$/\1 8.0/' ~/.config/alacritty/alacritty.yml
+        fi
+        ;;
+
+    glowarch)  # Main tower PC
+        MAIN_MONITOR=HDMI-A-0
+        SECOND_MONITOR=DVI-D-0
+        if xrandr | grep -q "$SECOND_MONITOR connected"; then
+            xrandr --output "$MAIN_MONITOR" \
+                --primary \
+                --mode 1920x1080 \
+                --rate 75
+
+            xrandr --output "$SECOND_MONITOR" \
+                --mode 1920x1080 \
+                --rate 60 \
+                --brightness 1.1 \
+                --right-of "$MAIN_MONITOR"
+        fi
+        ;;
+esac

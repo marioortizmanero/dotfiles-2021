@@ -1,0 +1,24 @@
+Last update made on Sun Sep 12 05:20:52 PM CEST 2021.
+180 explicitly installed programs:
+* 143 native
+* 37 external (AUR, PKGBUILDs)
+
+mario@btwiusedell 
+----------------- 
+OS: Arch Linux x86_64 
+Host: Vostro 5481 
+Kernel: 5.14.2-arch1-2 
+Uptime: 3 hours, 9 mins 
+Packages: 1202 (pacman) 
+Shell: zsh 5.8 
+Resolution: 1920x1080 
+DE: bspwm 
+WM: LG3D 
+Theme: Plata-Noir [GTK2/3] 
+Icons: Papirus-Dark [GTK2/3] 
+Terminal: alacritty 
+Terminal Font: "SF Mono" 
+CPU: Intel i5-8265U (8) @ 3.900GHz 
+GPU: Intel WhiskeyLake-U GT2 [UHD Graphics 620] 
+Memory: 2677MiB / 7634MiB 
+

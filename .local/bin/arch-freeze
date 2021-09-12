@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# This script will save information about the system: installed programs,
+# system info, a file tree... These can be configured in the `dotsmanager`
+# directory.
+#
+# Any script in `dotsmanager/scripts` will be executed and redirected into
+# the `localinfo` directory. This is useful to for example save your music
+# tracks (see `dotsmanager/scripts/spotify.py`).
+
+set -e
+
+DIR_BASE=~/.local/share/arch-freeze
+DIR_OUT="$DIR_BASE/out"
+DIR_SCRIPTS="$DIR_BASE/scripts"
+
+# Output files and directories
+OUT_SCRIPTS="$DIR_OUT/scripts"
+OUT_SPECS="$DIR_OUT/specs.txt"
+OUT_TREE="$DIR_OUT/directories.txt"
+OUT_INSTALLED="$DIR_OUT/installed.txt"
+
+# Configuration for the tree
+TREE_FILES="$DIR_BASE/dirs-list.txt"
+TREE_BLACKLIST="$DIR_BASE/dirs-blacklist.txt"
+
+
+# Function that prints a directory tree for $1 with a max depth of $2.
+function tree() {
+    function show_tree() {
+        local dir="$1"
+        local depth=$2
+        if [ "$depth" -le 0 ]; then
+            return
+        fi
+
+        depth=$((depth - 1))
+        for file in "$dir"/*; do
+            # Checking if the node exists
+            if [ ! -e "$file" ]; then continue; fi
+
+            # Checking that it's not in the blacklist
+            if grep -q "$(basename "$file")" "$TREE_BLACKLIST"; then
+                continue
+            fi
+
+            # Formatting the directory
+            local name
+            name=$(echo "$file" | sed -E -e "s:$main_dir/?::g; \
+                       s/[^-][^\/]*\//$spaces/g")
+
+            echo "${spaces}${name}"
+            show_tree "$file" "$depth"
+        done
+    }
+
+    spaces=$(printf "%-4s" " ")
+    main_dir=$1
+    depth=$2
+
+    touch "$TREE_BLACKLIST"
+
+    if [ -d "$main_dir" ]; then
+        echo "Tree of \"$main_dir\" with depth $depth:"
+        show_tree "$main_dir" "$depth"
+    fi
+}
+
+
+function save_trees() {
+    if ! [ -f "$TREE_FILES" ]; then
+        echo "No files configured for tree"
+        return
+    fi
+
+    while IFS=':' read -r folder depth <&3; do
+        folder=${folder/#\~/$HOME}
+        tree "$folder" "$depth"
+        echo ""
+    done 3< "$TREE_FILES" > "$OUT_TREE"
+}
+
+
+function get_packages() {
+    # Ignores the packages from `base` and `base-devel`. Part is taken from
+    # the Arch Linux Wiki:
+    # https://wiki.archlinux.org/index.php/Pacman/Tips_and_tricks#Getting_the_dependencies_list_of_several_packages
+    all_packages=$(pacman -Qq | sort)
+    base_packages=$(cat <(pacman -Qqg base-devel) <(LC_ALL=C pacman -Si base \
+        | awk -F'[:<=>]' '/^Depends/ {print $2}' | xargs -n1) | sort | uniq)
+    native_packages=$(comm -23 <(pacman -Qqen | sort) <(echo "$base_packages"))
+    external_packages=$(pacman -Qqem | sort)
+    installed_packages=$(cat <(echo "$native_packages") <(echo "$external_packages") | sort)
+}
+
+
+function run_scripts() {
+    if ! [ -d "$DIR_SCRIPTS" ]; then
+        echo "No scripts found"
+        return
+    fi
+
+    local into
+
+    mkdir -p "$OUT_SCRIPTS"
+    find "$DIR_SCRIPTS" -type f | while read -r file; do
+        if [ -x "$file" ]; then
+            into="$OUT_SCRIPTS/$(basename "$file").output"
+
+            echo ">> Running $file with output redirected into $into"
+            if ! "$file" > "$into"; then
+                echo ">> Failed to run the script, skipping"
+            fi
+        fi
+    done
+}
+
+
+function install_packages() {
+    # List with packages not already installed
+    echo "Installing packages"
+    get_packages
+
+    # Iterates the packages that aren't already installed on this device,
+    # prompting the user. At the end, all the installations are done at
+    # once.
+    local chosen_packages
+    while read -r package <&3; do
+        while true; do
+            echo -n "Install ${package}? [y/n]: "
+            read -r
+            if [ "$REPLY" = "y" ]; then
+                chosen_packages="$chosen_packages $package"
+                break
+            elif [ "$REPLY" = "n" ]; then
+                break
+            fi
+        done
+    done 3< <(comm -23 \
+        <(sort "$OUT_INSTALLED" | sed '/ (AUR)$/d') \
+        <(echo "$installed_packages"))
+
+    if [ -z "$chosen_packages" ]; then
+        echo "No packages to install"
+        return
+    fi
+
+    echo "$chosen_packages" | xargs --open-tty yay -S
+}
+
+
+echo ">> Setting up"
+mkdir -p "$DIR_BASE" "$DIR_OUT"
+get_packages
+
+echo ">> Saving system information"
+num_native=$(echo "$native_packages" | wc -l)
+num_external=$(echo "$external_packages" | wc -l)
+num_total=$((num_native + num_external))
+(
+    echo "Last update made on $(date).
+$num_total explicitly installed programs:
+* $num_native native
+* $num_external external (AUR, PKGBUILDs)
+"
+    neofetch --stdout 2>/dev/null || uname -a
+) > "$OUT_SPECS"
+
+echo ">> Saving installed packages"
+(
+    echo "$native_packages"
+    echo "$external_packages" | sed 's/.*/& (AUR)/'
+) | sort > "$OUT_INSTALLED"
+
+echo ">> Saving directory trees"
+save_trees
+
+echo ">> Running custom scripts"
+run_scripts

@@ -1,0 +1,21 @@
+[user]
+	email = marioortizmanero@gmail.com
+	name = Mario Ortiz Manero
+	signingkey = 1F61B4DD5674FCA8
+[sequence]
+	editor = nvim
+[core]
+	editor = nvim
+[pull]
+	rebase = false
+[commit]
+	gpgSign = true
+[tag]
+	gpgSign = true
+[init]
+	defaultBranch = master
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f

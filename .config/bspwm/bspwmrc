@@ -1,0 +1,199 @@
+#!/bin/sh
+# Configuration script for bspwm. Automatically handles multiple monitors,
+# assigning an equal number of workspaces for each of them. It also starts
+# up some programs in case they're available.
+#
+# The --restart flag can be passed in order to only restart the necessary
+# parts of this script when restarting.
+#
+# This acts as an `.xprofile` script because otherwise there are conflicts when
+# running both bspwm's config and `.xprofile` e.g. the displays are configured
+# after bspwm loads.
+
+# Miscelaneous configuration
+HOSTNAME=$(cat /etc/hostname)
+WALLPAPER=/usr/share/backgrounds/main.png
+# Configuration for program startup
+STARTUP_SLEEP=0.1
+MAX_STARTUP_ITER=20  # Timeout of 2s
+# The initial programs require the command name and the window class name. Use
+# `xprop` to obtain the latter.
+BROWSER=firefox
+BROWSER_CLASS=Firefox
+TERMINAL=alacritty
+TERMINAL_CLASS=Alacritty
+
+NUM_WORKSPACES=10
+NUM_MONITORS=$(xrandr | awk '/ connected / {print $1}' | wc -l)
+WORKSPACES_PER_MONITOR=$((NUM_WORKSPACES / NUM_MONITORS))
+
+log() {
+    printf "\e[36mbspwmrc: %s\e[39m\n" "$1"
+}
+
+# Starting a program after killing it cleanly.
+startup() {
+    # Starts a program (with arguments) in case it exists. It will also kill
+    # all previously running instances.
+    log "Starting $1"
+    if ! command -v "$1" >/dev/null 2>&1; then
+        log "Failed: command $1 doesn't exist"
+        return
+    fi
+
+    # Starting and killing PulseAudio is performed asynchronously, so this
+    # makes sure the requested state is real.
+    killall -q "$1"
+    local i=0
+    while pgrep "$1" &>/dev/null; do
+        log "Waiting for kill of $1..."
+        sleep "$STARTUP_SLEEP"
+
+        if [ "$i" -eq "$MAX_STARTUP_ITER" ]; then
+            log "Forcing kill of $1"
+            killall -q --signal SIGKILL "$1"
+        fi
+        i=$((i + 1))
+    done
+
+    "$@" &
+
+    while ! pgrep --full "$1" &>/dev/null; do
+        log "Waiting for launch of $1..."
+        sleep "$STARTUP_SLEEP"
+    done
+}
+
+
+### GENERAL CONFIG ###
+# Set keyboard layout
+setxkbmap es
+
+# Disables DPMS to prevent screen from blanking on standby
+xset s off -dpms
+
+
+### BSPWM CONFIG ###
+log "Configuring bspwm"
+
+# Calculating what workspaces are going to be used for each monitor
+# automatically. The primary monitor has priority over the rest and goes first.
+count=1
+xrandr | awk '{if ($2 == "connected") {
+    if ($3 == "primary") {
+        print 1, $1
+    } else {
+        print 2, $1
+    }
+}}' | sort | awk '{ print $2 }' | while read -r monitor; do
+    count=$((count + WORKSPACES_PER_MONITOR))
+    begin=$((count - WORKSPACES_PER_MONITOR))
+    end=$((count - 1))
+
+    workspaces=$(seq "$begin" "$end" | tr '\n' ' ')
+    bspc monitor "$monitor" -d  $workspaces
+done
+
+# Borders and gaps
+bspc config border_width 2
+bspc config window_gap 8
+bspc config normal_border_color "#000000"
+bspc config focused_border_color "#FFFFFF"
+# No gaps/borders with only one window in the workspace
+bspc config single_monocle true
+bspc config borderless_monocle true
+bspc config gapless_monocle true
+
+# Mouse
+bspc config focus_follows_pointer true
+bspc config pointer_modifier mod4
+bspc config pointer_action1 move
+bspc config pointer_action2 resize_corner
+
+# Programs
+bspc rule -a Zathura state=tiled
+bspc rule -a "GNU Octave" state=floating focus=off
+bspc rule -a Pavucontrol state=floating
+bspc rule -a feh state=floating
+bspc rule -a vidify state=floating
+bspc rule -a MEGAsync state=floating border=off
+
+
+### AUTOSTART ###
+# Compositor
+startup picom
+
+# Wallpaper
+log "Setting wallpaper"
+feh --bg-fill "$WALLPAPER" &
+
+# Hotkey daemon
+startup sxhkd
+
+# Mail
+startup birdtray
+
+# Status bar
+# Polybar with a custom script
+log "Starting polybar with launch script"
+case "$HOSTNAME" in
+    btwiusedell)
+        ~/.config/polybar/launch.sh laptop_bar
+        ;;
+    glowarch)
+        ~/.config/polybar/launch.sh desktop_bar
+        ;;
+esac
+
+# Notification daemon
+startup dunst -conf ~/.cache/wal/dunstrc
+
+# Equalizer
+# startup easyeffects --gapplication-service
+
+# Fix reparenting issues
+wmname LG3D &
+
+# Redshift. This resets the color and fully restarts the daemon. The geoclue
+# agent must be running in the background so that the location is detected
+# automatically.
+startup /usr/lib/geoclue-2.0/demos/agent
+redshift -x
+killall redshift
+startup redshift-gtk
+
+# Network Manager's applet
+if systemctl list-units | grep -q NetworkManager; then
+    startup nm-applet
+fi
+
+# Bluetooth applet
+if lsusb | grep Bluetooth; then
+    startup blueman-applet
+fi
+
+# Only open the initial programs with the restart flag
+if ! [ -f /tmp/bspwm_started ]; then
+    log "Loading initial programs"
+
+    # The browser in first workspace
+    bspc rule -a "$BROWSER_CLASS" desktop=^1 --one-shot
+    "$BROWSER" &
+
+    # A terminal in the second workspace, or the first workspace of the second
+    # monitor.
+    if [ $NUM_MONITORS -eq 1 ]; then
+        first=2
+    else
+        first=$((WORKSPACES_PER_MONITOR + 1))
+    fi
+    bspc rule -a "$TERMINAL_CLASS" desktop=^"$first" --one-shot
+    "$TERMINAL" &
+
+    # This should only be done the first time.
+    echo "" > /tmp/bspwm_started
+fi
+
+# Themes
+log "Setting theme"
+set-theme auto

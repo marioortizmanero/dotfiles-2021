@@ -1,0 +1,155 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Hours to switch between dark and light theme
+LIGHT_MODE_START=8
+DARK_MODE_START=17
+# Default themes
+DEFAULT_DARK_THEME=base16-onedark
+DEFAULT_LIGHT_THEME=base16-solarized
+
+GTK_DARK_CONFIG="
+gtk-application-prefer-dark-theme=true
+gtk-theme-name=Plata-Noir
+gtk-icon-theme-name=Papirus-Dark
+"
+
+GTK_LIGHT_CONFIG="
+gtk-application-prefer-dark-theme=false
+gtk-theme-name=Plata
+gtk-icon-theme-name=Papirus
+"
+
+function usage() {
+    echo "\
+usage: $0 MODE [THEME]
+MODE: light, dark, auto
+THEME: use \`wal --theme\` to list all of them
+
+If the mode is set to \`auto\`, it will be picked automatically as light mode
+when between $LIGHT_MODE_START:00 and $DARK_MODE_START:00, and otherwise as dark mode.
+
+If no theme is specified, the defaults will be used: $DEFAULT_LIGHT_THEME as the
+light theme, and $DEFAULT_DARK_THEME as the dark one."
+}
+
+function exists() {
+    for bin in "$@"; do
+        command -v "$bin" &> /dev/null
+        if [ $? -ne 0 ]; then
+            return 1
+        fi
+    done
+
+    return 0
+}
+
+function auto_mode() {
+    local cur_hour
+
+    cur_hour=$(date +%H)
+    if [ "$cur_hour" -ge "$DARK_MODE_START" ] || [ "$cur_hour" -lt "$LIGHT_MODE_START" ]; then
+        theme_mode=dark
+    else
+        theme_mode=light
+    fi
+}
+
+function merge_gtk_config() {
+    local key val
+    echo "$1" | while IFS='=' read -r key val;  do
+        sed -i -E "s/^$key=.*$/$key=$val/" ~/.config/gtk-3.0/settings.ini
+    done
+}
+
+function reload_gtk() {
+    local theme
+
+    theme="$(sed -n -E 's/^gtk-theme-name=(.*)$/\1/p' ~/.config/gtk-3.0/settings.ini)"
+    timeout 0.2s xsettingsd -c <(echo "Net/ThemeName \"$theme\"") || true
+}
+
+function reload_dunst() {
+    if ! pgrep dunst &>/dev/null; then
+        return
+    fi
+
+    killall -q dunst
+    dunst -config ~/.cache/wal/dunstrc &
+}
+
+# Manually restarting applications that don't reload the config automatically
+function reload_apps() {
+    reload_gtk
+    reload_dunst
+}
+
+if ! exists wal nvim-ctrl xsettingsd; then
+    echo "$PATH" >&2
+    echo "wal, nvim-ctrl and xsettingsd must be installed" >&2
+    exit 1
+fi
+
+if [ $# -lt 1 ]; then
+    usage
+    exit 1
+fi
+
+theme_mode="$1"
+theme_name="$2"
+wal_flags=""
+
+# Detecting the mode automatically if specified
+if [ "$theme_mode" = "auto" ]; then
+    auto_mode
+fi
+
+case "$theme_mode" in
+    light)
+        wal_flags+=" -l"
+        if [ -z "$theme_name" ]; then
+            theme_name=$DEFAULT_LIGHT_THEME
+        fi
+        ;;
+    dark)
+        if [ -z "$theme_name" ]; then
+            theme_name=$DEFAULT_DARK_THEME
+        fi
+        ;;
+    *)
+        echo "unknown mode \`$theme_mode\`"
+        exit 1
+        ;;
+esac
+
+echo "setting $theme_mode theme \`$theme_name\`"
+
+# Reset current working directory for later
+cd ~
+
+# Set the theme with pywal
+wal $wal_flags --theme "$theme_name" -n &
+
+# Update Xresources
+xrdb -merge ~/.cache/wal/colors.Xresources &>/dev/null &
+
+# Additional info about the setup
+echo "$theme_name" > ~/.cache/wal/theme_name
+echo "$theme_mode" > ~/.cache/wal/theme_mode
+
+# Reload neovim instances with the new theme, avoiding caches
+nvim-ctrl "luafile ~/.config/nvim/lua/config/themes/chooser.lua"
+nvim-ctrl "luafile ~/.config/nvim/lua/config/lualine.lua"
+
+# Update GTK theme
+if [ "$theme_mode" = "light" ]; then
+    merge_gtk_config "$GTK_LIGHT_CONFIG"
+else
+    merge_gtk_config "$GTK_DARK_CONFIG"
+fi
+# Refresh the config, needs a sleep to work properly
+sleep 3
+reload_apps
+
+echo "done"
