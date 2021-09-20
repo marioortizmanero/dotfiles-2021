@@ -70,19 +70,9 @@ function reload_gtk() {
     timeout 0.2s xsettingsd -c <(echo "Net/ThemeName \"$theme\"") || true
 }
 
-function reload_dunst() {
-    if ! pgrep dunst &>/dev/null; then
-        return
-    fi
-
-    killall -q dunst
-    dunst -config ~/.cache/wal/dunstrc &
-}
-
 # Manually restarting applications that don't reload the config automatically
 function reload_apps() {
     reload_gtk
-    reload_dunst
 }
 
 if ! exists wal nvim-ctrl xsettingsd; then
